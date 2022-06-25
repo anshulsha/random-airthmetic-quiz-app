@@ -10,7 +10,7 @@ Steps to run the project
 Use command -> git clone https://github.com/anshulsha/random-airthmetic-quiz-app.git
 
 ### `Install dependencies using Yarn`
-use command -> yarn install
+Use command -> yarn install
 
 
 ### `npm start`
