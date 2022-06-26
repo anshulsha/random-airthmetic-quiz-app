@@ -46,7 +46,7 @@ const Result = ({ result }) => {
 
   return (
     <>
-      {result.map((item, index) => (
+      {result && result?.map((item, index) => (
         <Card variant="outlined" className="main" key={index}>
           {card(item, index)}
         </Card>

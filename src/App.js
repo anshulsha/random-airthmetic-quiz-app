@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Typography, CardContent, Card } from "@mui/material";
+import { Typography, CardContent, Card, Button } from "@mui/material";
 
 import Quiz from "./quiz/quiz";
 import "./app.css";
@@ -24,6 +24,30 @@ function App() {
     setTotal((prev) => prev + d);
   };
 
+  useEffect(() => {
+    const scoreState = window.localStorage.getItem(`score`);
+    if (scoreState !== null) {
+      setScore(JSON.parse(scoreState));
+    }
+
+    const totalState = window.localStorage.getItem(`total`);
+    if (totalState !== null) {
+      setTotal(JSON.parse(totalState));
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem("score", score);
+    localStorage.setItem("total", total);
+  })
+
+  const resetHandler = (input) => {
+    localStorage.setItem("score", JSON.stringify(0));
+    localStorage.setItem("total", JSON.stringify(0));
+    setScore(0);
+    setTotal(0);
+  }
+
   return (
     <>
     <Card variant="outlined" className="main">
@@ -31,14 +55,22 @@ function App() {
         <Typography variant="h5" component="div">
           Cummulative Score: {score}/{total}
         </Typography>
+        <Button
+              variant="contained"
+              color="error"
+              type="button"
+              onClick={() => resetHandler("reset")}
+            >
+              Reset Quiz
+            </Button>
       </CardContent>
     </Card>
       <div className="main">
         <div className="quiz-1">
-          <Quiz questionNo={1} cummulativeScore={cummulativeScore1} />
+          <Quiz questionNo={1} cummulativeScore={cummulativeScore1} appId={1}/>
         </div>
         <div className="quiz-2">
-          <Quiz questionNo={1} cummulativeScore={cummulativeScore2} />
+          <Quiz questionNo={1} cummulativeScore={cummulativeScore2} appId={2}/>
         </div>
       </div>
     </>

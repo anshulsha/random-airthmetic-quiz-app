@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import {
   Button,
   Card,
@@ -19,38 +19,115 @@ import {
 import "./quiz.css";
 import Timer from "./Timer";
 import Result from "./result";
+// import { Counter } from "./timers";
 
-const randomQuestion = (operators) => {
-  const num1 = parseInt(Math.random() * 10);
-  let num2 = parseInt(Math.random() * 10);
+const Quiz = ({ cummulativeScore, appId }) => {
+  const randomQuestion = (operators) => {
+    const num1 =
+      JSON.parse(window.localStorage.getItem(`num1-${appId}`)) ||
+      parseInt(Math.random() * 10);
+    let num2 =
+      JSON.parse(window.localStorage.getItem(`num2-${appId}`)) ||
+      parseInt(Math.random() * 10);
 
-  const randomOperator = parseInt(Math.random() * 10) % operators.length;
-  const op = operators[randomOperator];
-  while (op === "/" && num2 === 0) {
-    num2 = parseInt(Math.random() * 10);
-  }
-  const obj = {
-    num1,
-    num2,
-    op,
+    const randomOperator =
+      JSON.parse(window.localStorage.getItem(`randomOperator-${appId}`)) ||
+      parseInt(Math.random() * 10) % operators.length;
+    window.localStorage.setItem(`num1-${appId}`, JSON.stringify(num1));
+    window.localStorage.setItem(`num2-${appId}`, JSON.stringify(num2));
+    window.localStorage.setItem(
+      `randomOperator-${appId}`,
+      JSON.stringify(randomOperator)
+    );
+    const op = operators[randomOperator];
+    while (op === "/" && num2 === 0) {
+      num2 = parseInt(Math.random() * 10);
+    }
+    const obj = {
+      num1,
+      num2,
+      op,
+    };
+    return obj;
   };
-  return obj;
-};
+useEffect(() => {
+  window.localStorage.setItem(`timer-${appId}`, localStorage.getItem(`timer-${appId}`));
+})
+  const [reset, setReset] = useState(
+    null || JSON.parse(window.localStorage.getItem(`reset-${appId}`))
+  );
 
-const Quiz = ({ cummulativeScore }) => {
   const answerRef = useRef(null);
   const addRef = useRef(null);
   const subRef = useRef(null);
   const mulRef = useRef(null);
   const divRef = useRef(null);
-  const noOfQuestions = useRef();
-  const [startQuiz, setStartQuiz] = useState(false);
+  const noOfQuestions = useRef(null);
+  const [startQuiz, setStartQuiz] = useState(null);
+
   const [operator, setOperator] = useState([]);
   const [noOfQuestionsState, setNoOfQuestionsState] = useState();
 
   const [arr, setArr] = useState([]);
   const { num1, num2, op } = randomQuestion(operator);
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(
+    0 || JSON.parse(window.localStorage.getItem(`count-${appId}`))
+  );
+
+  useEffect(() => {
+    if (arr.length > 0)
+      setArr(JSON.parse(window.localStorage.getItem(`arr-${appId}`)));
+    const quizState = window.localStorage.getItem(`startQuiz-${appId}`);
+    if (quizState !== null) {
+      setStartQuiz(JSON.parse(quizState));
+    }
+
+    const operatorsState = localStorage.getItem(`operators-${appId}`);
+    if (operatorsState !== []) {
+      setOperator(JSON.parse(operatorsState));
+    }
+
+    const arrState = localStorage.getItem(`arr-${appId}`);
+
+    if (arrState !== []) {
+      setArr(JSON.parse(arrState));
+    }
+
+    if (
+      JSON.parse(window.localStorage.getItem(`count-${appId}`)) >=
+      JSON.parse(window.localStorage.getItem(`questions-${appId}`))
+    ) {
+      setStartQuiz(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(`startQuiz-${appId}`, JSON.stringify(startQuiz));
+    localStorage.setItem(`operators-${appId}`, JSON.stringify(operator));
+    localStorage.setItem(`arr-${appId}`, JSON.stringify(arr));
+  });
+
+  useEffect(() => {
+    if (arr.length > 0)
+      window.localStorage.setItem(`arr-${appId}`, JSON.stringify(arr));
+  }, [arr]);
+
+  useEffect(() => {
+    window.localStorage.setItem(`startQuiz-${appId}`, startQuiz);
+  }, [startQuiz]);
+
+  useEffect(() => {
+    window.localStorage.setItem(`operators-${appId}`, JSON.stringify(operator));
+  }, [operator]);
+
+  useEffect(() => {
+    window.localStorage.setItem(`reset-${appId}`, JSON.stringify(reset));
+  }, [reset]);
+
+  useEffect(() => {
+    window.localStorage.setItem(`count-${appId}`, JSON.stringify(count));
+  }, [count]);
+
   const {
     register,
     handleSubmit,
@@ -87,13 +164,21 @@ const Quiz = ({ cummulativeScore }) => {
   };
 
   const onSubmit = (type) => {
+    window.localStorage.removeItem(`num1-${appId}`);
+    window.localStorage.removeItem(`num2-${appId}`);
+    window.localStorage.removeItem(`randomOperator-${appId}`);
+    window.localStorage.setItem(`timer-${appId}`, JSON.stringify(21));
     const answerObj = {
       question: `${num1} ${op} ${num2}`,
       answer: parseInt(checkAnswer(op)),
-      yourAnswer: parseInt(answerRef.current.value),
+      yourAnswer:
+        answerRef.current.value === ""
+          ? "Not Attempted"
+          : parseInt(answerRef.current.value),
       correct: parseInt(checkAnswer(op)) === parseInt(answerRef.current.value),
     };
     setArr([...arr, answerObj]);
+    window.localStorage.setItem(`arr-${appId}`, JSON.stringify(arr));
     answerRef.current.value = "";
     answerRef.current.focus();
 
@@ -102,27 +187,45 @@ const Quiz = ({ cummulativeScore }) => {
     if (noOfQuestionsState - 2 < count || type === "end") {
       setStartQuiz(false);
     }
+    if (
+      JSON.parse(window.localStorage.getItem(`count-${appId}`)) >
+      JSON.parse(window.localStorage.getItem(`questions-${appId}`)) - 2
+    ) {
+      setStartQuiz(false);
+    }
+    
   };
 
   useEffect(() => {
-    if (noOfQuestionsState !== undefined && startQuiz === false ) {
-        cummulativeScore(calculateScore(), parseInt(noOfQuestionsState));
+    if (noOfQuestionsState !== undefined && startQuiz === false) {
+      cummulativeScore(calculateScore(), parseInt(noOfQuestionsState));
     }
   }, [startQuiz]);
 
-  const resetHandler = () => {
+  const resetHandler = (input) => {
+    if (input === "reset") {
+      setNoOfQuestionsState("");
+    }
     setArr([]);
     setCount(0);
-    answerRef.current.value = "";
+    window.localStorage.removeItem(`questions-${appId}`);
+    window.localStorage.removeItem(`operators-${appId}`);
+    window.localStorage.removeItem(`arr-${appId}`);
+    window.localStorage.removeItem(`reset-${appId}`);
+    // if (answerRef) answerRef.current.value = "";
     setStartQuiz(false);
+    setReset(false);
   };
 
   const startHandler = () => {
+    window.localStorage.removeItem(`arr-${appId}`);
+    window.localStorage.setItem(`timer-${appId}`, 20);
     setArr([]);
     setCount(0);
     setStartQuiz(1);
-
+    setReset(true);
     setNoOfQuestionsState(noOfQuestions.current.value);
+
     const temp = [];
     if (addRef.current.checked) {
       temp.push("+");
@@ -140,30 +243,40 @@ const Quiz = ({ cummulativeScore }) => {
       temp.push("/");
       setOperator(temp);
     }
-    temp.length === 0
-      ? alert("Please select atleast one operator")
-      : setStartQuiz(0);
+
+    if (temp.length === 0) {
+      setStartQuiz(false);
+      setReset(false);
+      return alert("Please select atleast one operator");
+    } else setStartQuiz(0);
 
     if (noOfQuestions.current.value > 0) {
       setStartQuiz(true);
     } else {
-      alert("Please enter number of questions to proceed!");
       setStartQuiz(0);
+      setReset(false);
+      return alert("Please enter number of questions to proceed!");
     }
+    window.localStorage.setItem(
+      `questions-${appId}`,
+      noOfQuestions.current.value
+    );
   };
 
   const scoreCard = (
     <>
       <div className="card">
         <CardContent style={{ width: "100%" }}>
-          {(!startQuiz && noOfQuestionsState === undefined) ||
-          noOfQuestionsState === "" ? (
-            <Typography variant="h5" component="div">
-              Click To Start Quiz!
-            </Typography>
+          {(!startQuiz && !reset) || noOfQuestionsState === "" ? (
+            <>
+              <Typography variant="h5" component="div">
+                Click To Start Quiz!
+              </Typography>
+            </>
           ) : (
             <Typography variant="h5" component="div">
-              Score: {calculateScore()}/{noOfQuestionsState}
+              Score: {calculateScore()}/
+              {window.localStorage.getItem(`questions-${appId}`)}
             </Typography>
           )}
         </CardContent>
@@ -221,10 +334,13 @@ const Quiz = ({ cummulativeScore }) => {
         </div>
       </form>
       <div className="timerWrapper">
+      {/* <Counter submit={onSubmit} appId={appId} count={count}/> */}
         <Timer
           submit={onSubmit}
           count={count}
           noOfQuestions={noOfQuestionsState}
+          appId={appId}
+          duration={JSON.parse(localStorage.getItem(`timer-${appId}`))-1}
         />
       </div>
     </>
@@ -236,28 +352,72 @@ const Quiz = ({ cummulativeScore }) => {
       <FormGroup row>
         <FormControlLabel
           value="end"
-          control={<Checkbox defaultChecked={true} />}
+          control={
+            <Checkbox
+              defaultChecked={
+                window.localStorage.getItem(`operators-${appId}`) &&
+                JSON.parse(
+                  window.localStorage.getItem(`operators-${appId}`)
+                ).includes("+")
+                  ? true
+                  : false
+              }
+            />
+          }
           label="+"
           labelPlacement="start"
           inputRef={addRef}
         />
         <FormControlLabel
           value="end"
-          control={<Checkbox defaultChecked={true} />}
+          control={
+            <Checkbox
+              defaultChecked={
+                window.localStorage.getItem(`operators-${appId}`) &&
+                JSON.parse(
+                  window.localStorage.getItem(`operators-${appId}`)
+                ).includes("-")
+                  ? true
+                  : false
+              }
+            />
+          }
           label="-"
           labelPlacement="start"
           inputRef={subRef}
         />
         <FormControlLabel
           value="end"
-          control={<Checkbox defaultChecked={true} />}
+          control={
+            <Checkbox
+              defaultChecked={
+                window.localStorage.getItem(`operators-${appId}`) &&
+                JSON.parse(
+                  window.localStorage.getItem(`operators-${appId}`)
+                ).includes("*")
+                  ? true
+                  : false
+              }
+            />
+          }
           label="*"
           labelPlacement="start"
           inputRef={mulRef}
         />
         <FormControlLabel
           value="end"
-          control={<Checkbox defaultChecked={true} />}
+          control={
+            <Checkbox
+              defaultChecked={
+                window.localStorage.getItem(`operators-${appId}`) &&
+                JSON.parse(
+                  window.localStorage.getItem(`operators-${appId}`)
+                ).includes("/")
+                  ? true
+                  : false
+              }
+            />
+          }
           label="/"
           labelPlacement="start"
           inputRef={divRef}
@@ -274,6 +434,7 @@ const Quiz = ({ cummulativeScore }) => {
             <TextField
               variant="outlined"
               placeholder="No of questions"
+              defaultValue={window.localStorage.getItem(`questions-${appId}`)}
               inputRef={noOfQuestions}
               //   value={20}
             />
@@ -288,6 +449,15 @@ const Quiz = ({ cummulativeScore }) => {
             >
               Start Quiz
             </Button>
+            <Button
+              variant="contained"
+              color="error"
+              type="button"
+              onClick={() => resetHandler("reset")}
+            >
+              Reset Quiz
+            </Button>
+            
           </Card>
           <Result result={arr} />
         </>
