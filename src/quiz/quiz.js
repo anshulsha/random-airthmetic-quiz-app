@@ -22,6 +22,15 @@ import Result from "./result";
 // import { Counter } from "./timers";
 
 const Quiz = ({ cummulativeScore, appId }) => {
+  // useEffect(() => {
+  //   if (localStorage.getItem(`operators-${appId}`) == "")
+  //     localStorage.setItem(`operators-${appId}`, []);
+  //   if (localStorage.getItem(`arr-${appId}`) == "")
+  //     localStorage.setItem(`arr-${appId}`, []);
+  //   if (localStorage.getItem(`startQuiz-${appId}`) == null)
+  //     localStorage.setItem(`startQuiz-${appId}`, false);
+  // }, []);
+
   const randomQuestion = (operators) => {
     const num1 =
       JSON.parse(window.localStorage.getItem(`num1-${appId}`)) ||
@@ -30,16 +39,16 @@ const Quiz = ({ cummulativeScore, appId }) => {
       JSON.parse(window.localStorage.getItem(`num2-${appId}`)) ||
       parseInt(Math.random() * 10);
 
-    const randomOperator =
+    const randomOperator = operators && (localStorage.getItem(`randomOperator-${appId}`) &&
       JSON.parse(window.localStorage.getItem(`randomOperator-${appId}`)) ||
-      parseInt(Math.random() * 10) % operators.length;
+      parseInt(Math.random() * 10) %  operators.length);
     window.localStorage.setItem(`num1-${appId}`, JSON.stringify(num1));
     window.localStorage.setItem(`num2-${appId}`, JSON.stringify(num2));
     window.localStorage.setItem(
       `randomOperator-${appId}`,
       JSON.stringify(randomOperator)
     );
-    const op = operators[randomOperator];
+    const op =  operators && operators[randomOperator];
     while (op === "/" && num2 === 0) {
       num2 = parseInt(Math.random() * 10);
     }
@@ -50,9 +59,12 @@ const Quiz = ({ cummulativeScore, appId }) => {
     };
     return obj;
   };
-useEffect(() => {
-  window.localStorage.setItem(`timer-${appId}`, localStorage.getItem(`timer-${appId}`));
-})
+  useEffect(() => {
+    window.localStorage.setItem(
+      `timer-${appId}`,
+      localStorage.getItem(`timer-${appId}`)
+    );
+  });
   const [reset, setReset] = useState(
     null || JSON.parse(window.localStorage.getItem(`reset-${appId}`))
   );
@@ -75,7 +87,7 @@ useEffect(() => {
   );
 
   useEffect(() => {
-    if (arr.length > 0)
+    if (arr && arr.length > 0)
       setArr(JSON.parse(window.localStorage.getItem(`arr-${appId}`)));
     const quizState = window.localStorage.getItem(`startQuiz-${appId}`);
     if (quizState !== null) {
@@ -108,7 +120,7 @@ useEffect(() => {
   });
 
   useEffect(() => {
-    if (arr.length > 0)
+    if (arr && arr.length > 0)
       window.localStorage.setItem(`arr-${appId}`, JSON.stringify(arr));
   }, [arr]);
 
@@ -193,7 +205,6 @@ useEffect(() => {
     ) {
       setStartQuiz(false);
     }
-    
   };
 
   useEffect(() => {
@@ -334,13 +345,13 @@ useEffect(() => {
         </div>
       </form>
       <div className="timerWrapper">
-      {/* <Counter submit={onSubmit} appId={appId} count={count}/> */}
+        {/* <Counter submit={onSubmit} appId={appId} count={count}/> */}
         <Timer
           submit={onSubmit}
           count={count}
           noOfQuestions={noOfQuestionsState}
           appId={appId}
-          duration={JSON.parse(localStorage.getItem(`timer-${appId}`))-1}
+          duration={JSON.parse(localStorage.getItem(`timer-${appId}`)) - 1}
         />
       </div>
     </>
@@ -358,7 +369,7 @@ useEffect(() => {
                 window.localStorage.getItem(`operators-${appId}`) &&
                 JSON.parse(
                   window.localStorage.getItem(`operators-${appId}`)
-                ).includes("+")
+                )?.includes("+")
                   ? true
                   : false
               }
@@ -376,7 +387,7 @@ useEffect(() => {
                 window.localStorage.getItem(`operators-${appId}`) &&
                 JSON.parse(
                   window.localStorage.getItem(`operators-${appId}`)
-                ).includes("-")
+                )?.includes("-")
                   ? true
                   : false
               }
@@ -394,7 +405,7 @@ useEffect(() => {
                 window.localStorage.getItem(`operators-${appId}`) &&
                 JSON.parse(
                   window.localStorage.getItem(`operators-${appId}`)
-                ).includes("*")
+                )?.includes("*")
                   ? true
                   : false
               }
@@ -412,7 +423,7 @@ useEffect(() => {
                 window.localStorage.getItem(`operators-${appId}`) &&
                 JSON.parse(
                   window.localStorage.getItem(`operators-${appId}`)
-                ).includes("/")
+                )?.includes("/")
                   ? true
                   : false
               }
@@ -457,7 +468,6 @@ useEffect(() => {
             >
               Reset Quiz
             </Button>
-            
           </Card>
           <Result result={arr} />
         </>
