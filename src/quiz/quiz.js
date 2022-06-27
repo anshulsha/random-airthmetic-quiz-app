@@ -211,7 +211,7 @@ const Quiz = ({ cummulativeScore, appId }) => {
     if (noOfQuestionsState !== undefined && startQuiz === false) {
       cummulativeScore(calculateScore(), parseInt(noOfQuestionsState));
     }
-  }, [startQuiz]);
+  }, [startQuiz, reset]);
 
   const resetHandler = (input) => {
     if (input === "reset") {
