@@ -215,7 +215,7 @@ const Quiz = ({ cummulativeScore, appId }) => {
 
   const resetHandler = (input) => {
     if (input === "reset") {
-      setNoOfQuestionsState("");
+      setNoOfQuestionsState(0);
     }
     setArr([]);
     setCount(0);
